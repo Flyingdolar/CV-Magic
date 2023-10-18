@@ -6,28 +6,22 @@ import sys  # Import System for Error Handling
 from detect import (
     hand_detection,
     coin_detection,
-    isTouching,
+    check_touch,
+    hide_coin,
 )  # Import Detection Function
 from macros import fprint, waitUser  # Import Print Function
 
-
-mode = "SHOW"
-hover = False
-touch = 0
 
 # Define Absolute Path to Model
 modelPath = sys.path[0] + "hand_landmarker.task"
 
 # Open & Setup Camera
 fprint("M", "Opening Camera...")
-cam = cv.VideoCapture(0)
+# Open a Video File instead of Camera
+cam = cv.VideoCapture("coin1_big_1.mkv")
 if not cam.isOpened():
     fprint("E", "Cannot open camera")
     exit()
-# Downsizing Camera (For Performance)
-cam.set(cv.CAP_PROP_FPS, 60)  # Set FPS to 60
-cam.set(cv.CAP_PROP_FRAME_WIDTH, 640)  # Set Width to 640
-cam.set(cv.CAP_PROP_FRAME_HEIGHT, 480)  # Set Height to 480
 fprint("M", "Camera Opened!")
 
 # Wait for User to Press Space
@@ -52,7 +46,16 @@ while True:
     if not ret:  # if frame is read correctly ret is True
         fprint("E", "Can't receive frame (stream end?). Exiting ...")
         exit()
-    coinPos, frame = coin_detection(frame, draw=True)  # Detect Coin
+    coinsPos, frame = coin_detection(frame, draw=True)  # Detect Coin
+    # Create a Coins state to save individual coin state: touch: {number of touch}, hover: {is hover}
+    coins = (
+        coinsPos is not None
+        and [
+            {"times": 0, "hover": False, "x": cPos[0], "y": cPos[1], "r": cPos[2]}
+            for cPos in coinsPos
+        ]
+        or None
+    )
     cv.imshow("frame", frame)  # Display frame
     if cv.waitKey(1) == ord(" "):  # Handle Exit
         break
@@ -70,38 +73,37 @@ while True:
         break
 
     # Detect Hand
-    hands, frame = hand_detection(frame)
+    hands, frame = hand_detection(frame, draw=True)
 
-    if isTouching(hands, coinPos) and not hover:
-        print("Touched!")
-        hover = True
-        touch += 1
-    elif not isTouching(hands, coinPos) and hover:
-        print("Leaved!")
-        hover = False
+    # Do nothing if there is no coins
+    if coins is None:
+        cv.imshow("frame", frame)
+        continue
 
-    mode = "SHOW" if touch % 2 == 0 else "HIDE"
+    # Check if hand is touching the coin
+    if hands is not None:
+        touchList = check_touch(hands, coins)
+        if touchList is not None:
+            for coin in coins:
+                if coin in touchList and coin.hover is False:
+                    coin.times += 1
+                    coin.hover = True
+                elif coin not in touchList and coin.hover is True:
+                    coin.hover = False
 
-    # Cover the Coin base on the Coin Position with the Background
-    background = cv.imread("background.png")
-    deviation = 20
-    if mode == "HIDE":
-        for circle in coinPos:
-            x, y, r = circle[0], circle[1], circle[2] + deviation
-            stX, stY, edX, edY = x - r, y - r, x + r, y + r
-            frame[stY:edY, stX:edX] = background[stY:edY, stX:edX]
+    # Hide the coin if it is touched odd times
+    for coin in coins:
+        if coin.times % 2 == 1:
+            frame = hide_coin(frame, hands, coin)
 
     # Display the resulting frame
     cv.imshow("frame", frame)
 
-    # Manual Trigger Mode
-    if cv.waitKey(1) == ord(" "):
-        print("Triggered!")
-        touch += 1
-
-    # Handle Exit
-    if cv.waitKey(1) == ord("q"):
+    # User Triggered Exit or Toggle Mode
+    usrCmd = cv.waitKey(1)
+    if usrCmd == ord("q") or usrCmd == 27:
         break
+
 
 # Release & Destroy Camera
 cam.release()  # Release camera
