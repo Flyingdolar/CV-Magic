@@ -12,6 +12,8 @@
 | 3.  | [Task2: Card Magic](#task2-card-magic) |
 | 4.  | [Task3: Dice Magic](#task3-dice-magic) |
 | 5.  | [Difficulty](#difficulty) |
+| 6.  | [Installation](#installation) |
+| 7.  | [Usage](#usage) |
 
 ## Overview
 
@@ -196,6 +198,8 @@ The method of Dice is very close to the Card Magic, so I will only explain rough
 
 ## Difficulty
 
+> Here are some difficulties that I met while doing this project: (Some has been solved, some not)
+
 1. **Capture Hand Contour**
 
     Because `mediapipe` only provide the hand landmark, we need to capture the hand contour by using `cv2.findContours()`. However, its requires lots energy to do this, and could let the video lag.
@@ -211,3 +215,69 @@ The method of Dice is very close to the Card Magic, so I will only explain rough
 3. **Direction of the Card**
 
     To detect which direction of card is a little bit difficult things to do. I tried to order the corner by clockwise, but there are some cases that the card width would be longer than the height in some tricky angle. In this case, the order of the corner would be wrong. So I use the `x` value of the corner to order them, and it works more stable than before ( But I think it is not the best way).
+
+4. **The Other Face of Dice**
+
+    When the dice is thrown, there will be 3 faces of the dice shown on the screen. However, the different faces of dice could be hard to distinguish in similar light. I thought that I would implement a for loop to find the top 3 lightest faces of cube (Doing this by using `cv2.findContours()`), but it would be too slow to do this. So I still thinking about how to do this better...
+
+## Installation
+
+- Pre-requirements:
+
+  - **Python 3.6+**
+
+  - **OpenCV 4.5.1+**  *( could later install by requirements.txt )*
+
+  - **Numpy 1.19.5+**  *( could later install by requirements.txt )*
+
+  - **Mediapipe 0.8.3+**  *( could later install by requirements.txt )*
+
+- Clone this repository:
+
+    ```bash
+    git clone https://github.com/Flyingdolar/Computer-Vision.git
+    ```
+
+- Install the requirements:
+
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+## Usage
+
+- Run the program:
+
+    ```bash
+    python main.py
+    ```
+
+- Some `args` you could append before run the program
+
+  - `--file_path` ： Using File Mode --> Path to Video File
+
+  - `--cam_num` ： Using Camera Mode --> Camera Number (Default: 0)
+
+  - `--trick` ： Select the Trick Name that want to be Implemented (Default: "") If not selected, will show all the tricks on terminal to choose
+
+    | Trick Name | Command |
+    | ---------- | ----------- |
+    | Coin Magic | `apply_coin_trick` |
+    | Card Magic | `apply_card_trick` |
+    | Dice Magic | `apply_dice_trick` |
+
+- Example:
+
+    ```bash
+    python main.py --file_path task1/video1.mp4 --trick "Coin Magic"
+    ```
+
+- Key Control:
+
+  - `space` ： Trigger the next step
+
+  - `w` ： Switch the card content / Switch the dice content
+
+  - `s` ： Switch the card content / Switch the dice content
+
+  - `q` ： Quit the program
