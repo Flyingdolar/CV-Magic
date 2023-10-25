@@ -6,3 +6,6 @@ movie/
 *.mp4
 *.gif
 *.mkv
+# Mac Files
+.DS_Store
+._
