@@ -33,7 +33,7 @@ def parse_args() -> argparse.Namespace:  # Parse Command Line Arguments
     parser.add_argument(
         "--trick",
         type=str,
-        default="apply_coin_trick",
+        default="apply_card_trick",
         help="Select the Trick Name that want to be Implemented",
         required=False,
     )
@@ -82,6 +82,7 @@ class useCamera:  # Class for Camera Operations
         # Other Variables
         self.bg = None  # Background Image
         self.cpList = None  # Coins Position List
+        self.card = 1  # Card Image
 
     def read(self) -> None:  # Read Camera
         ret, frame = self.cam.read()
@@ -135,11 +136,9 @@ def main():
         cv.imshow("frame", cap.fr)  # Display frame
         usrKey = cv.waitKey(1)
         if usrKey == ord("w"):  # Press 'w' to Increase Exposure
-            cap.cam.set(cv.CAP_PROP_EXPOSURE, cap.cam.get(cv.CAP_PROP_EXPOSURE) - 1)
-            print("Exp = ", cap.cam.get(cv.CAP_PROP_EXPOSURE))
+            cap.card = cap.card + 1 if cap.card < 54 else 1
         elif usrKey == ord("s"):  # Press 's' to Adjust Exposure Down
-            cap.cam.set(cv.CAP_PROP_EXPOSURE, cap.cam.get(cv.CAP_PROP_EXPOSURE) + 1)
-            print("Exp = ", cap.cam.get(cv.CAP_PROP_EXPOSURE))
+            cap.card = cap.card - 1 if cap.card > 1 else 54
         elif usrKey == ord("q"):  # Press 'q' to Quit
             print("Quit")
             break
