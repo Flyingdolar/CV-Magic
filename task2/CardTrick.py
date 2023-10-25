@@ -58,8 +58,12 @@ def apply_card_trick(cam):
         card = cv.warpPerspective(card, Mtx, (cam.fr.shape[1], cam.fr.shape[0]))
         # Make a mask for the card
         cardMsk = np.zeros(cam.fr.shape, dtype=np.uint8)
+        # Let the mask set 255 where the square that founded by the corners
+        cv.fillConvexPoly(cardMsk, pts2.astype(np.int32), (255, 255, 255))
         # Only keep the key features of the card
-        cv.fillConvexPoly(cardMsk, hull, (255, 255, 255))
+        cardMsk = cv.bitwise_not(cardMsk)  # Reverse the mask
+        cardMsk = cv.dilate(cardMsk, np.ones((12, 12), np.uint8), iterations=1)
+        cardMsk = cv.bitwise_not(cardMsk)  # Reverse the mask back
         cardMsk = np.where(card == np.array([255, 255, 255]), 0, cardMsk)
         # Paste the card image on the frame
         cam.fr = np.where(cardMsk == np.array([255, 255, 255]), card, cam.fr)
