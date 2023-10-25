@@ -83,6 +83,7 @@ class useCamera:  # Class for Camera Operations
         self.bg = None  # Background Image
         self.cpList = None  # Coins Position List
         self.card = 1  # Card Image
+        self.dice = 1  # Dice Image
 
     def read(self) -> None:  # Read Camera
         ret, frame = self.cam.read()
@@ -137,8 +138,10 @@ def main():
         usrKey = cv.waitKey(1)
         if usrKey == ord("w"):  # Press 'w' to Increase Exposure
             cap.card = cap.card + 1 if cap.card < 54 else 1
+            cap.dice = cap.dice + 1 if cap.dice < 6 else 1
         elif usrKey == ord("s"):  # Press 's' to Adjust Exposure Down
             cap.card = cap.card - 1 if cap.card > 1 else 54
+            cap.dice = cap.dice - 1 if cap.dice > 1 else 6
         elif usrKey == ord("q"):  # Press 'q' to Quit
             print("Quit")
             break
