@@ -40,7 +40,7 @@ def apply_dice_trick(cam):
         cv.circle(cam.fr, tuple(corner[0]), 5, (0, 0, 255), -1)
     # Paste the card image on the frame by the corners
     if len(corners) == 4:
-        dice = cv.imread("dices/" + str(cam.dice) + ".png")  # Read the dice image
+        dice = cv.imread("img/dices/" + str(cam.dice) + ".png")  # Read the dice image
         dice = cv.resize(dice, (cam.fr.shape[1], cam.fr.shape[0]))
         cardH, cardW, _ = dice.shape
         # Get the perspective transform matrix
@@ -68,7 +68,4 @@ def apply_dice_trick(cam):
         # Paste the card image on the frame
         cam.fr = np.where(diceMsk == np.array([255, 255, 255]), dice, cam.fr)
         cam.fr = np.where(diceMsk == np.array([20, 20, 20]), light, cam.fr)
-        # Save the dice image
-        cv.imwrite("dice.png", dice)
-        cv.imwrite("diceMsk.png", diceMsk)
     return cam

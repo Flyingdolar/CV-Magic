@@ -12,7 +12,7 @@ def apply_coin_trick(cap):
         cap.stPrint("Capture Background")
         if cv.waitKey(1) == ord(" "):
             cap.bg = cap.fr.copy()
-            cv.imwrite("background.png", cap.bg)
+            cv.imwrite("tmp/background.png", cap.bg)
             cap.chStage()
     elif cap.stage == 1:  # Capture Coin Position
         cap.stPrint("Capture Coin Position")
@@ -23,7 +23,7 @@ def apply_coin_trick(cap):
                     {"ts": 0, "hv": False, "x": cPos[0], "y": cPos[1], "r": cPos[2]}
                     for cPos in cpList
                 ]
-                cv.imwrite("coin.png", cap.fr)
+                cv.imwrite("tmp/coin.png", cap.fr)
                 cap.chStage()  # Go to next stage
             else:
                 fprint("E", "No Coin Detected!")

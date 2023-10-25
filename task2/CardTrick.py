@@ -40,7 +40,7 @@ def apply_card_trick(cam):
         cv.circle(cam.fr, tuple(corner[0]), 5, (0, 0, 255), -1)
     # Paste the card image on the frame by the corners
     if len(corners) == 4:
-        card = cv.imread("cards/" + str(cam.card) + ".png")  # Read the card image
+        card = cv.imread("img/cards/" + str(cam.card) + ".png")  # Read the card image
         card = cv.resize(card, (cam.fr.shape[1], cam.fr.shape[0]))
         cardH, cardW, _ = card.shape
         # Get the perspective transform matrix
