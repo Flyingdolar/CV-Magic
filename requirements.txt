@@ -1,0 +1,5 @@
+opencv-python
+numpy
+argparse
+mediapipe
+object_detection

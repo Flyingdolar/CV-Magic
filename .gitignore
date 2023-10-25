@@ -1,3 +1,8 @@
 # Genrative Files
 __pycache__/
+movie/
+# Media Files
 *.png
+*.mp4
+*.gif
+*.mkv

@@ -5,36 +5,37 @@ from typing import Tuple, Union
 
 
 # Define Coin_Detection Function
-def coin_detection(
+def coinDet(
     frame: np.ndarray, draw: bool = False
 ) -> Tuple[Union[np.ndarray, None], np.ndarray]:
     gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-    gray = cv.medianBlur(gray, 5)
+    gray = cv.GaussianBlur(gray, (9, 9), 0)
     circles = cv.HoughCircles(
         image=gray,
         method=cv.HOUGH_GRADIENT,
         dp=1,
-        minDist=5,
-        param1=80,
-        param2=80,
-        minRadius=0,
-        maxRadius=0,
+        minDist=20,
+        param1=50,
+        param2=50,
+        minRadius=10,
+        maxRadius=100,
     )
 
     if circles is not None:
         circles = np.uint16(np.around(circles))
+        circles[0, :, 2] += 5
         # Draw Circles
         if draw:
             for circle in circles[0, :]:
                 cv.circle(frame, (circle[0], circle[1]), circle[2], (0, 255, 0), 2)
                 cv.circle(frame, (circle[0], circle[1]), 2, (0, 0, 255), 3)
-        return circles, frame
+        return circles[0, :], frame
     else:
         return None, frame
 
 
 # Define Hand_Detection Function
-def hand_detection(
+def handDet(
     frame: np.ndarray, draw: bool = False
 ) -> Tuple[Union[np.ndarray, None], np.ndarray]:
     mpHands = mp.solutions.hands
@@ -56,62 +57,47 @@ def hand_detection(
     for lm in lMarks:
         keyPoints.append((int(lm.x * imgCol), int(lm.y * imgRow)))
 
-    # Convert to HSV and set range
-    hsvImg = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
-    h, s, v = cv.split(hsvImg)
-    minHSV = np.array([np.amin(h), np.amin(s), np.amin(v)])
-    maxHSV = np.array([np.amax(h), np.amax(s), np.amax(v)])
+    # Get the Polygon of the Hand
+    contours = cv.convexHull(np.array(keyPoints))
+    mask = np.zeros(frame.shape, dtype=np.uint8)
+    cv.drawContours(mask, [contours], -1, (255, 255, 255), -1)
 
-    # Create Mask & Draw Contour
-    mask = cv.inRange(hsvImg, minHSV, maxHSV)
-    contours, _ = cv.findContours(mask, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
-
-    # Remove all Contours that are not in the Hand(Key Points)
-    for contour in contours:
-        for point in contour:
-            if tuple(point[0]) not in keyPoints:
-                cv.drawContours(mask, [contour], -1, (0, 0, 0), -1)
-
+    # Get the Contours of the Hand
     if (lMarks is not None) and draw:
-        cv.drawContours(frame, contours, -1, (0, 255, 0), 3)
+        # Draw Polygon of the Hand, filled with green
+        cv.drawContours(frame, [contours], -1, (0, 255, 0), 1)
 
     # Return the Contours and the Frame
-    return contours, frame
+    return mask, frame
 
 
 # Define Whether Hand is Touching Coin
-def check_touch(handCts: np.ndarray, coins: np.ndarray) -> list:
+def touchCk(handMsk: np.ndarray, coins: np.ndarray) -> list:
     touchList = []  # List of Coins that are Touching the Hand
-    if coins is None or handCts is None:
+    if coins is None or handMsk is None:
         return touchList  # No Coin or Hand Detected
 
     for coin in coins:  # Detect if Hand is Touching which Coin
-        for handCt in handCts:
-            # Test if Coins center point is in the Hand Contour
-            if cv.pointPolygonTest(handCt, (coin.x, coin.y), False) >= 0:
-                touchList.append(coin)  # Add Coin Index to List
+        if handMsk[coin["y"], coin["x"]][0] == 255:
+            touchList.append(coin)
     return touchList
 
 
 # Define Hide Coin Function (Notice: Do not cover the hand part.)
-def hide_coin(frame: np.ndarray, handCts: np.ndarray, coin: dict) -> np.ndarray:
+def coinHd(frame: np.ndarray, handMsk: np.ndarray, coins: np.ndarray) -> np.ndarray:
     coinPoints = []
     in_contour = False
     bg = cv.imread("background.png")
 
-    # Collect all the points in the coin area
-    for i in range(coin.x - coin.r, coin.x + coin.r):
-        for j in range(coin.y - coin.r, coin.y + coin.r):
-            if (i - coin.x) ** 2 + (j - coin.y) ** 2 <= coin.r**2:
-                coinPoints.append((i, j))
+    # Create a mask image by filling the coin area with white
+    mask = np.zeros(frame.shape, dtype=np.uint8)
+    for coin in coins:
+        if coin["ts"] % 2 == 1:
+            cv.circle(mask, (coin["x"], coin["y"]), coin["r"], (255, 255, 255), -1)
 
-    # Fill the coin area with the image background
-    for point in coinPoints:
-        if handCts is not None:
-            for handCt in handCts:
-                if cv.pointPolygonTest(handCt, point, False) >= 0:
-                    in_contour = True
-                    break
-        if not in_contour:
-            frame[point[1], point[0]] = bg[point[1], point[0]]
-    return frame
+    # Restore the hands in the mask image(if exists)
+    if handMsk is not None:
+        mask = np.where(handMsk == np.array([255, 255, 255]), 0, mask)
+    # Filled the frame with the background image where the mask is white
+    frame = np.where(mask == np.array([255, 255, 255]), bg, frame)
+    return frame  # Return the frame
