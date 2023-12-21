@@ -269,7 +269,9 @@ The method of Dice is very close to the Card Magic, so I will only explain rough
 - Example:
 
     ```bash
-    python main.py --file_path task1/video1.mp4 --trick "Coin Magic"
+    python3 main.py --trick "apply_coin_trick"
+    python3 main.py --trick "apply_card_trick"
+    python3 main.py --trick "apply_dice_trick"
     ```
 
 - Key Control:
