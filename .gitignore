@@ -4,3 +4,4 @@ movie/
 # Mac Files
 .DS_Store
 ._
+tmp/
