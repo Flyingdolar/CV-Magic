@@ -87,7 +87,7 @@ def touchCk(handMsk: np.ndarray, coins: np.ndarray) -> list:
 def coinHd(frame: np.ndarray, handMsk: np.ndarray, coins: np.ndarray) -> np.ndarray:
     coinPoints = []
     in_contour = False
-    bg = cv.imread("background.png")
+    bg = cv.imread("tmp/background.png")
 
     # Create a mask image by filling the coin area with white
     mask = np.zeros(frame.shape, dtype=np.uint8)
